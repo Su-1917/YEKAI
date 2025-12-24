@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Odyssey | Liquid Silk 2025</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;400;600&family=Playfair+Display:ital,wght@0,400;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --tiffany: #0abab5; --pink: #ff69b4; --gold: #ffd700;
+            --c1: var(--tiffany); --c2: var(--pink); --c3: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        
+        body { 
+            background-color: #000; color: white; font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; 
+            /* 3个全屏Section，精准300vh，彻底消灭底部留白 */
+            height: 300vh; 
+        }
+
+        /* --- 1. 开屏检测 --- */
+        #intro-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 100000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+        .scan-line { width: 250px; height: 1px; background: var(--tiffany); margin: 30px 0; box-shadow: 0 0 20px var(--tiffany); animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { transform: translateY(-30px); opacity: 0; } 50% { transform: translateY(30px); opacity: 1; } }
+
+        /* --- 2. 极速流变背景 (背景球在所有窗口下可见) --- */
+        .bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #000; overflow: hidden; }
+        .orb { position: absolute; width: 130vw; height: 130vw; border-radius: 50%; filter: blur(100px); opacity: 0.6; mix-blend-mode: screen; will-change: transform; }
+        
+        .orb-1 { background: radial-gradient(circle, var(--c1) 0%, transparent 70%); top: -40%; left: -30%; }
+        .orb-2 { background: radial-gradient(circle, var(--c2) 0%, transparent 70%); bottom: -40%; right: -30%; }
+        .orb-3 { background: radial-gradient(circle, var(--c3) 0%, transparent 70%); top: 10%; left: 10%; }
+
+        /* --- 3. 通用玻璃按钮 --- */
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 22px 60px; border-radius: 50px;
+            font-size: 0.9rem; letter-spacing: 4px; font-weight: 600; cursor: pointer; transition: 0.4s; text-transform: uppercase;
+        }
+        .btn-glass:hover { background: #fff; color: #000; transform: translateY(-3px); }
+
+        /* --- 4. 布局单元 --- */
+        .section { height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center; padding: 40px; text-align: center; }
+        #time-display { font-size: 7.5rem; font-weight: 100; letter-spacing: -5px; }
+        #date-display { letter-spacing: 10px; opacity: 0.5; margin-bottom: 10px; }
+
+        .hub-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 450px; }
+        .btn-hub {
+            background: var(--glass-bg); backdrop-filter: blur(30px); border: 1px solid var(--border);
+            padding: 35px; border-radius: 30px; color: #fff; cursor: pointer; transition: 0.4s;
+        }
+        .btn-hub:hover { border-color: #fff; transform: scale(1.02); background: rgba(255,255,255,0.08); }
+        .btn-hub h4 { font-family: 'Playfair Display'; font-size: 1.8rem; font-style: italic; letter-spacing: 2px; }
+
+        /* --- 5. 3D 实体圆柱蛋糕 --- */
+        .cake-container { position: relative; width: 320px; height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+        .cake-top { width: 200px; height: 75px; background: rgba(255,255,255,0.2); border: 1px solid var(--border); border-radius: 50%; margin: 0 auto; position: relative; z-index: 10; }
+        .cake-side { 
+            width: 200px; height: 110px; background: linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.02)); 
+            border-left: 1px solid var(--border); border-right: 1px solid var(--border); 
+            margin: -38px auto 0; position: relative; z-index: 9; display: flex; justify-content: center; align-items: center; 
+        }
+        .cake-num { font-family: 'Playfair Display'; font-size: 5.5rem; font-weight: 600; color: #fff; text-shadow: 0 0 25px rgba(255,255,255,0.8); margin-top: 10px; }
+        .cake-bottom { width: 200px; height: 75px; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 50%; margin: -38px auto 0; position: relative; z-index: 8; }
+        .candle { width: 12px; height: 60px; background: #fff; border-radius: 6px; position: absolute; top: -35px; left: 50%; transform: translateX(-50%); z-index: 15; }
+        .flame { width: 26px; height: 40px; background: #fff; border-radius: 50% 50% 20% 20%; position: absolute; left: 50%; top: -48px; transform: translateX(-50%); filter: blur(4px); box-shadow: 0 0 40px #fff; animation: flicker 0.1s infinite alternate; }
+
+        /* --- 6. 通用透视浮层 (不再是纯黑背景) --- */
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0, 0, 0, 0.4); /* 半透明黑 */
+            backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px); /* 极高模糊实现高级感 */
+            z-index: 50000; display: none; opacity: 0; padding: 40px; overflow-y: auto; 
+        }
+        .gallery-vertical { display: flex; flex-direction: column; gap: 50px; max-width: 900px; margin: 100px auto; }
+        .gallery-item { border-radius: 40px; overflow: hidden; border: 1px solid var(--border); }
+        .gallery-item img { width: 100%; display: block; }
+
+        #wish-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(60px); -webkit-backdrop-filter: blur(60px);
+            z-index: 90000; display: none; opacity: 0;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        #wish-input {
+            background: none; border: none; border-bottom: 2px solid #fff;
+            color: #fff; font-size: 5rem; width: 90%; max-width: 1200px;
+            text-align: center; padding: 40px; margin-bottom: 100px;
+            font-family: 'Playfair Display'; font-weight: 100;
+        }
+
+        #finale-wrapper { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; opacity: 0; width: 100%; height: 100%; }
+        .hbd-text { 
+            font-family: 'Playfair Display'; 
+            font-size: 7rem; 
+            font-style: italic; 
+            margin-bottom: 50px; 
+            background: linear-gradient(to right, var(--c1), var(--c2)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+
+        /* 音乐 */
+        .music-player { position: fixed; bottom: 35px; left: 35px; z-index: 80000; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--border); padding: 12px 25px; border-radius: 50px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .disc { width: 30px; height: 30px; background: linear-gradient(45deg, var(--tiffany), var(--pink)); border-radius: 50%; animation: rotate 4s linear infinite; animation-play-state: paused; }
+        .playing .disc { animation-play-state: running; }
+    </style>
+</head>
+<body>
+
+    <div class="music-player" id="musicPlayer" onclick="toggleMusic()">
+        <div class="disc"></div>
+        <div style="font-size: 0.75rem; letter-spacing: 2px; font-weight: 200;">ODYSSEY: <b>ACTIVE</b></div>
+        <audio id="bgMusic" loop><source src="music.mp3" type="audio/mpeg"></audio>
+    </div>
+
+    <!-- 1. 开屏检测 -->
+    <div id="intro-screen">
+        <div style="font-size: 0.7rem; letter-spacing: 6px; opacity: 0.4;">VERIFYING BIOMETRICS...</div>
+        <div class="scan-line"></div>
+        <div style="font-family: 'Playfair Display'; font-size: 3.5rem; margin-bottom: 40px;">Alex Zhang</div>
+        <button class="btn-glass" onclick="startJourney()">解锁 20 岁之旅</button>
+    </div>
+
+    <div class="bg-canvas">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- 2. Section 1: 时钟 -->
+    <section class="section">
+        <div class="clock-container">
+            <div id="date-display">2025.12.24</div>
+            <div id="time-display">22:00:00</div>
+            <div style="letter-spacing: 15px; font-size: 0.8rem; color: var(--tiffany); margin-top: 15px;">WEDNESDAY</div>
+        </div>
+    </section>
+
+    <!-- 3. Section 2: HUB -->
+    <section class="section" id="hub-sec">
+        <div class="hub-grid">
+            <div class="btn-hub" onclick="openOverlay('memoirs')"><h4>Memoirs</h4><span>回忆录 / 纵向相册</span></div>
+            <div class="btn-hub" onclick="openOverlay('messages')"><h4>Greetings</h4><span>好友寄语</span></div>
+            <div class="btn-hub" onclick="openOverlay('wishes')"><h4>Wishes</h4><span>愿望收集箱</span></div>
+        </div>
+    </section>
+
+    <!-- 4. Section 3: 仪式 -->
+    <section class="section" id="ceremony-sec">
+        <div id="ceremony-content">
+            <div class="cake-container">
+                <div class="cake-body">
+                    <div class="cake-top"><div class="candle"><div class="flame" id="flame"></div></div></div>
+                    <div class="cake-side"><div class="cake-num">20</div></div>
+                    <div class="cake-bottom"></div>
+                </div>
+            </div>
+            <div style="margin-top: 60px;"><button class="btn-glass" onclick="openWish()">吹灭蜡烛</button></div>
+        </div>
+        
+        <div id="finale-wrapper">
+            <div class="hbd-text">Happy Birthday.</div>
+            <button class="btn-glass" onclick="resetCeremony()">再许一个愿望</button>
+        </div>
+    </section>
+
+    <!-- 5. 全屏透视层 -->
+    <div id="overlay" class="overlay">
+        <div style="position:fixed; top:40px; right:40px; cursor:pointer; opacity: 0.8; letter-spacing: 2px;" onclick="closeOverlay()">[ CLOSE ]</div>
+        <div id="overlay-content"></div>
+    </div>
+
+    <div id="wish-screen">
+        <h2 style="font-weight: 100; letter-spacing: 20px; margin-bottom: 60px; opacity: 0.7;">MAKE A WISH</h2>
+        <input type="text" id="wish-input" placeholder="..." autocomplete="off">
+        <button class="btn-glass" onclick="submitWish()">寄出愿望</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. 时钟
+        function updateClock() {
+            const now = new Date();
+            const weeks = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            document.getElementById('date-display').innerText = `${now.getFullYear()}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getDate().toString().padStart(2,'0')}`;
+            document.getElementById('time-display').innerText = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // 2. 音乐
+        const audio = document.getElementById('bgMusic');
+        const player = document.getElementById('musicPlayer');
+        function toggleMusic() {
+            if (audio.paused) { audio.play(); player.classList.add('playing'); } 
+            else { audio.pause(); player.classList.remove('playing'); }
+        }
+
+        function startJourney() {
+            gsap.to("#intro-screen", { opacity: 0, duration: 1, onComplete: () => {
+                document.getElementById('intro-screen').style.display = 'none';
+                toggleMusic();
+            }});
+        }
+
+        // 3. 极速流变逻辑
+        // 核心：让背景色根据滚动线性均匀分布
+        const masterTl = gsap.timeline({ 
+            scrollTrigger: { 
+                trigger: "body", 
+                start: "top top", 
+                end: "bottom bottom", 
+                scrub: 2.5 
+            } 
+        });
+        masterTl
+            .to(":root", { "--c1": "#0abab5", "--c2": "#ff69b4", "--c3": "#7000ff" }, 0.2) 
+            .to(":root", { "--c1": "#ffd700", "--c2": "#7000ff", "--c3": "#0abab5" }, 0.4)
+            .to(":root", { "--c1": "#ff0000", "--c2": "#0abab5", "--c3": "#ffffff" }, 0.6)
+            .to(":root", { "--c1": "#ff69b4", "--c2": "#0000ff", "--c3": "#ffd700" }, 0.8)
+            .to(":root", { "--c1": "#ffffff", "--c2": "#0abab5", "--c3": "#ff69b4" }, 1);
+
+        // 背景光球独立极速运动
+        function moveOrbs() {
+            gsap.to(".orb-1", { x: "25%", y: "20%", duration: 4, repeat: -1, yoyo: true, ease: "sine.inOut" });
+            gsap.to(".orb-2", { x: "-20%", y: "-25%", duration: 3.5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+            gsap.to(".orb-3", { scale: 1.4, x: "10%", duration: 5, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        }
+        moveOrbs();
+
+        // 4. 交互
+        let wishList = ["✨ 永远保持这份少年的热忱"];
+        const overlayData = {
+            memoirs: () => `<div class="gallery-vertical"><div class="gallery-item"><img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?w=1000"></div><div class="gallery-item"><img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1000"></div></div>`,
+            messages: () => `<div class="gallery-vertical"><div style="background:var(--glass-bg); padding:50px; border-radius:30px; border:1px solid var(--border); font-size:1.4rem; font-weight:200;">“生日快乐！愿你眼里有星辰大海，脚下有繁花似锦。”</div></div>`,
+            wishes: () => `<div class="gallery-vertical">${wishList.map(w => `<div style="background:var(--glass-bg); padding:30px; border-radius:20px; border:1px solid var(--border);">${w}</div>`).join('')}</div>`
+        };
+
+        function openOverlay(type) {
+            document.getElementById('overlay-content').innerHTML = overlayData[type]();
+            document.getElementById('overlay').style.display = 'block';
+            gsap.to(document.getElementById('overlay'), { opacity: 1, duration: 0.8 });
+        }
+        function closeOverlay() { gsap.to("#overlay", { opacity: 0, duration: 0.5, onComplete: () => document.getElementById('overlay').style.display = 'none' }); }
+
+        function openWish() {
+            gsap.to("#flame", { scale: 0, opacity: 0, duration: 0.8 });
+            setTimeout(() => {
+                const ws = document.getElementById('wish-screen');
+                ws.style.display = 'flex';
+                gsap.to(ws, { opacity: 1, duration: 1 });
+            }, 1000);
+        }
+
+        function submitWish() {
+            const val = document.getElementById('wish-input').value.trim();
+            if(!val) return;
+            wishList.unshift(`✨ ${val}`);
+            document.getElementById('wish-input').value = "";
+            gsap.to("#wish-screen", { opacity: 0, duration: 0.8, onComplete: () => {
+                document.getElementById('wish-screen').style.display = 'none';
+                triggerSalute();
+            }});
+        }
+
+        function triggerSalute() {
+            let shots = 0;
+            const colors = ['#0abab5', '#ff69b4', '#ffd700', '#ff0000', '#0000ff', '#ffffff'];
+            const interval = setInterval(() => {
+                confetti({ particleCount: 200, spread: 90, origin: { x: 0, y: 0.8 }, colors, angle: 60, startVelocity: 75 });
+                confetti({ particleCount: 200, spread: 90, origin: { x: 1, y: 0.8 }, colors, angle: 120, startVelocity: 75 });
+                shots++; if(shots >= 20) clearInterval(interval);
+            }, 400);
+
+            gsap.to("#ceremony-content", { opacity: 0, duration: 1, onComplete: () => {
+                document.getElementById('ceremony-content').style.display = 'none';
+                const wrapper = document.getElementById('finale-wrapper');
+                wrapper.style.display = 'flex';
+                gsap.to(wrapper, { opacity: 1, scale: 1, duration: 1.5 });
+            }});
+        }
+
+        function resetCeremony() {
+            gsap.to("#finale-wrapper", { opacity: 0, duration: 0.8, onComplete: () => {
+                document.getElementById('finale-wrapper').style.display = 'none';
+                document.getElementById('ceremony-content').style.display = 'block';
+                gsap.to("#ceremony-content", { opacity: 1, duration: 1 });
+                gsap.to("#flame", { scale: 1, opacity: 1, duration: 1.5 });
+            }});
+        }
+    </script>
+</body>
+</html>
